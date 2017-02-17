@@ -1,17 +1,20 @@
 function three_d_state_plotter()
     clear all;
     close all;
-    length = 0.1;
+    length = 0.5;
     % the data should be "num, x, y, z, roll, pitch, yaw".
-    state_data = csvread('~/Desktop/poseoutput_2017-02-09-22-27-30.csv');
+    %state_data = csvread('~/Desktop/poseoutput_2017-02-09-22-27-30.csv');
+    %state_data = csvread('~/Downloads/0214.csv');
+    state_data = csvread('~/Desktop/poseoutput_2017-02-13-21-23-07.csv');
     estimated_state = kalman_estimator(state_data);
+    csvwrite('./kalman_estimated.csv', estimated_state);
     % 	 axis
     tx = [length, 0.0, 0.0];
     ty = [0.0, length, 0.0];
     tz = [0.0, 0.0, length];    
     % 行数分forする
     figure(1)
-    for i=1:10:size(state_data, 1)
+    for i=1:1:size(state_data, 1)
        % generate axis vectors
        % rotate axis vectors by roll, pitch, yaw
         R = rpy2rmatrix(state_data(i, 5), state_data(i, 6), state_data(i, 7));
@@ -39,7 +42,7 @@ function three_d_state_plotter()
     axis equal;
     title('original');
     figure(2)
-    for i=1:10:size(estimated_state, 1)
+    for i=1:1:size(estimated_state, 1)
        % generate axis vectors
        % rotate axis vectors by roll, pitch, yaw
         R = rpy2rmatrix(estimated_state(i, 10), estimated_state(i, 11), estimated_state(i, 12));
@@ -57,11 +60,11 @@ function three_d_state_plotter()
         hold on;
     
         p1=plot3(tx_vec(:,1), tx_vec(:,2), tx_vec(:,3));
-        set(p1,'Color','Green','LineWidth',1);
+        set(p1,'Color','Green','LineWidth', 3);
         p1=plot3(ty_vec(:,1), ty_vec(:,2), ty_vec(:,3));
-        set(p1,'Color','Blue','LineWidth',1);
+        set(p1,'Color','Blue','LineWidth',3);
         p1=plot3(tz_vec(:,1), tz_vec(:,2), tz_vec(:,3));
-        set(p1,'Color','Red','LineWidth',1);
+        set(p1,'Color','Red','LineWidth',3);
     end;
     axis equal;
     title('kalman')
@@ -92,19 +95,19 @@ end
 
 function estimatedM = kalman_estimator(M)
 % discreat time
-dt = 1.0;
+dt = 0.05;
 % 誤差共分散行列
 pEst=eye(18);
 % state vector
-xEst=[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]';
+xEst=[0 0 0 4.117 0.6762 0 0 0 0 0 0 0 0 0 0 0 0 0]';
 % observation vector
 z = [0 0 0 0 0 0]';
 % Q small, R large : 観測値を信頼しない
 % Q large, R small : 観測値を信頼する
 % covariance matrix for motion
-Q = diag([0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 toRadian(1) toRadian(1) toRadian(1) toRadian(1) toRadian(1) toRadian(1) toRadian(1) toRadian(1) toRadian(1)]).^2;
+Q = diag([1000 1000 1000 1000 1000 1000 1000 1000 1000 toRadian(1) toRadian(1) toRadian(1) toRadian(1) toRadian(1) toRadian(1) toRadian(1) toRadian(1) toRadian(1)]).^2;
 % covariance matrix for observation
-R = diag([100 100 100 toRadian(10) toRadian(10) toRadian(10)]).^2;
+R = diag([0.00001 0.00001 0.00001 toRadian(1) toRadian(1) toRadian(1)]).^2;
 % state transition matrix
 A = [1 0 0 dt 0  0  0.5*(dt)^2 0          0
      0 1 0 0  dt 0  0          0.5*(dt)^2 0
@@ -169,4 +172,22 @@ function plot2d(data, data2)
     figure(8)
     plot(data(:,1), data(:,7), data(:,1), data2(:,12))
     title('yaw')
+    % v
+    figure(9)
+    a = 10;
+    b = ones(1, a);
+    diff_x = diff(data(:,2));
+    diff_y = diff(data(:,3));
+    diff_x(1)/0.05
+    diff_y(1)/0.05
+    movemean_x = filter(b, a, diff_x);
+    movemean_y = filter(b, a, diff_y);
+    p1 = plot(data(:,1)*0.05/60.0,  sqrt(data2(:,4).^2.0 + data2(:,5).^2)*(18/5), (1:length(diff_x))*0.05/60.0, sqrt((diff_x/0.05).^2.0 + (diff_y/0.05).^2.0)*18/5, (1:length(movemean_x))*0.05/60.0, sqrt((movemean_x/0.05).^2.0 + (movemean_y/0.05).^2.0)*18/5)
+    set(p1,'LineWidth',1);
+    legend('カルマンフィルタ','差分', '移動平均','Location','southeast')
+    title('車速')
+    axis([-inf,inf,0,80])
+    xlabel('time [minutes]')
+    ylabel('velocity [km/h]')
 end
+
