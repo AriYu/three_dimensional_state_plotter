@@ -3,9 +3,9 @@ function three_d_state_plotter()
     close all;
     length = 0.5;
     % the data should be "num, x, y, z, roll, pitch, yaw".
-    %state_data = csvread('~/Desktop/poseoutput_2017-02-09-22-27-30.csv');
+    state_data = csvread('~/Desktop/poseoutput_2017-02-09-22-27-30.csv');
     %state_data = csvread('~/Downloads/0214.csv');
-    state_data = csvread('~/Desktop/poseoutput_2017-02-13-21-23-07.csv');
+    %state_data = csvread('~/Desktop/poseoutput_2017-02-13-21-23-07.csv');
     estimated_state = kalman_estimator(state_data);
     csvwrite('./kalman_estimated.csv', estimated_state);
     % 	 axis
@@ -14,7 +14,7 @@ function three_d_state_plotter()
     tz = [0.0, 0.0, length];    
     % 行数分forする
     figure(1)
-    for i=1:1:size(state_data, 1)
+    for i=1:10:size(state_data, 1)
        % generate axis vectors
        % rotate axis vectors by roll, pitch, yaw
         R = rpy2rmatrix(state_data(i, 5), state_data(i, 6), state_data(i, 7));
@@ -42,7 +42,7 @@ function three_d_state_plotter()
     axis equal;
     title('original');
     figure(2)
-    for i=1:1:size(estimated_state, 1)
+    for i=1:10:size(estimated_state, 1)
        % generate axis vectors
        % rotate axis vectors by roll, pitch, yaw
         R = rpy2rmatrix(estimated_state(i, 10), estimated_state(i, 11), estimated_state(i, 12));
